@@ -1,6 +1,6 @@
 # average_affine_transform_mat
 Small zero dependency C++ library to correctly average affine transformation matrices using quaternion SLERP.
-Supports weighted and non-weighted average of more two or more matrices/quaternion.
+Supports weighted and non-weighted average of two or more matrices/quaternions.
 
 ```cpp
 int main() {
