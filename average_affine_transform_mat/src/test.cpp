@@ -193,15 +193,16 @@ int test()
             throw label;
         } 
 
-        int num_angles = 7;
-        ABCf angles[7] = {
+        int num_angles = 8;
+        ABCf angles[8] = {
             {0,45,90},
             {45,90,135},
             {90,135,180},
             {135,180,225},
             {180,225,270},
             {225,270,315},
-            {270,315,360}
+            {270,315,360},
+            {315,270,225}
         };
         
         int num_weights = 10;
