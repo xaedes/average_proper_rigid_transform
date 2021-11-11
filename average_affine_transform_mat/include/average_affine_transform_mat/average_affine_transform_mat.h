@@ -7,10 +7,75 @@
 
 namespace average_affine_transform_mat {
 
+    template<class Scalar=float> Scalar dot(const Scalar* a, const Scalar* b);
+
+    // Function declarations short line
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           
+    void average_mat(Scalar* mat_average, const Scalar* mat_a, const Scalar* mat_b);
+    template<class Scalar=float, int StrideMat = 16, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0, class ScalarW=float>  
+    void average_mat(Scalar* mat_average, const Scalar* mats, int num, const ScalarW* weights);
+    template<class Scalar=float, int StrideMat = 16, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                       
+    void average_mat(Scalar* mat_average, const Scalar* mats, int num);
+
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0>                                                                             
+    void average_quat(Scalar* quat_average, const Scalar* quat_a, const Scalar* quat_b);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarW=float>                                                        
+    void average_quat(Scalar* quat_average, const Scalar* quats, int num, const ScalarW* weights);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0>                                                                             
+    void average_quat(Scalar* quat_average, const Scalar* quats, int num);
+
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                      
+    void mix_mat(Scalar* mat_mix, const Scalar* mat_a, const Scalar* mat_b, ScalarK k_);
+    template<class Scalar=float, int StrideMat = 16, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>  
+    void mix_mat(Scalar* mats_mix, const Scalar* mat_a, const Scalar* mat_b, const ScalarK* ks, int num_k);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                                                        
+    void mix_quat(Scalar* quat_mix, const Scalar* quat_a, const Scalar* quat_b, ScalarK k);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                                                        
+    void mix_quat(Scalar* quat_mix, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k);
+
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                                                        
+    void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, ScalarK k_);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                                                        
+    void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k);
+
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           
+    void quat_to_mat(Scalar* mat, const Scalar* quat);
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           
+    void mat_to_quat(Scalar* quat, const Scalar* mat);
+
+
+    // Function declarations long line
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           void average_mat(Scalar* mat_average, const Scalar* mat_a, const Scalar* mat_b);
+    template<class Scalar=float, int StrideMat = 16, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0, class ScalarW=float>  void average_mat(Scalar* mat_average, const Scalar* mats, int num, const ScalarW* weights);
+    template<class Scalar=float, int StrideMat = 16, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                       void average_mat(Scalar* mat_average, const Scalar* mats, int num);
+
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0>                                                                             void average_quat(Scalar* quat_average, const Scalar* quat_a, const Scalar* quat_b);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarW=float>                                                        void average_quat(Scalar* quat_average, const Scalar* quats, int num, const ScalarW* weights);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0>                                                                             void average_quat(Scalar* quat_average, const Scalar* quats, int num);
+
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                      void mix_mat(Scalar* mat_mix, const Scalar* mat_a, const Scalar* mat_b, ScalarK k_);
+    template<class Scalar=float, int StrideMat = 16, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>  void mix_mat(Scalar* mats_mix, const Scalar* mat_a, const Scalar* mat_b, const ScalarK* ks, int num_k);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                                                        void mix_quat(Scalar* quat_mix, const Scalar* quat_a, const Scalar* quat_b, ScalarK k);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                                                        void mix_quat(Scalar* quat_mix, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k);
+
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                                                        void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, ScalarK k_);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                                                        void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k);
+
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           void quat_to_mat(Scalar* mat, const Scalar* quat);
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           void mat_to_quat(Scalar* quat, const Scalar* mat);
+
+    // Function definitions
+
+    template<class Scalar=float> Scalar dot(const Scalar* a, const Scalar* b)
+    {
+        return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
+    }
+
     template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>
     void quat_to_mat(Scalar* mat, const Scalar* quat)
     {
         // glm/gtc/quaternion.inl template<typename T, qualifier Q> GLM_FUNC_QUALIFIER mat<3, 3, T, Q> mat3_cast(qua<T, Q> const& q)
+        // see GLM.LICENSE file 
         Scalar qx = quat[QuatXYZ+0];
         Scalar qy = quat[QuatXYZ+1];
         Scalar qz = quat[QuatXYZ+2];
@@ -54,6 +119,7 @@ namespace average_affine_transform_mat {
     void mat_to_quat(Scalar* quat, const Scalar* mat)
     {
         // glm/glm/gtc/quaternion.inl template<typename Scalar, qualifier Q> GLM_FUNC_QUALIFIER qua<Scalar, Q> quat_cast(mat<4, 4, Scalar, Q> const& m)
+        // see GLM.LICENSE file 
         
         Scalar m00 = mat[StrideX*0+StrideY*0];
         Scalar m11 = mat[StrideX*1+StrideY*1];
@@ -119,16 +185,11 @@ namespace average_affine_transform_mat {
         }
     }
 
-    template<class Scalar=float> Scalar dot(const Scalar* a, const Scalar* b)
-    {
-        return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
-    }
-
-
     template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>
     void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, ScalarK k_)
     {
         // glm/ext/quaternion_common.inl template<typename T, qualifier Q> GLM_FUNC_QUALIFIER qua<T, Q> slerp(qua<T, Q> const& x, qua<T, Q> const& y, T a)
+        // see GLM.LICENSE file 
 
         Scalar cosTheta = dot(quat_a, quat_b);
         // If cosTheta < 0, the interpolation will take the long way around the sphere.
@@ -170,6 +231,7 @@ namespace average_affine_transform_mat {
     void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k)
     {
         // glm/ext/quaternion_common.inl template<typename T, qualifier Q> GLM_FUNC_QUALIFIER qua<T, Q> slerp(qua<T, Q> const& x, qua<T, Q> const& y, T a)
+        // see GLM.LICENSE file 
 
         Scalar cosTheta = dot(quat_a, quat_b);
         // If cosTheta < 0, the interpolation will take the long way around the sphere.
