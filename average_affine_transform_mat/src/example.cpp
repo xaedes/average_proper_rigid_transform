@@ -38,12 +38,12 @@ int main() {
     };
     float quat_id[4];
     float quat_rotZ90[4];
-    mat_to_quat(id, quat_id);
-    mat_to_quat(rotZ90, quat_rotZ90);
+    mat_to_quat(quat_id, id);
+    mat_to_quat(quat_rotZ90, rotZ90);
     float quat_rotZ45[4];
-    quat_slerp(quat_id, quat_rotZ90, 0.5f, quat_rotZ45);
+    mix_quat(quat_rotZ45, quat_id, quat_rotZ90, 0.5f);
     float rotZ45[16];
-    quat_to_mat(quat_rotZ45, rotZ45);
+    quat_to_mat(rotZ45, quat_rotZ45);
 
     print_mat ("id",          id);           
     print_quat("quat_id",     quat_id);     

@@ -4,6 +4,7 @@ set(PROJECT_NAME average_affine_transform_mat)
 project( ${PROJECT_NAME} )
 
 option(BUILD_EXAMPLE "Build example." ON)
+option(BUILD_TESTS "Build tests." ON)
 
 include("compiler_options.cmake")
 
@@ -22,4 +23,11 @@ target_include_directories(
 if (BUILD_EXAMPLE)
     add_executable(${PROJECT_NAME}_example src/example.cpp)
     target_link_libraries(${PROJECT_NAME}_example PRIVATE ${PROJECT_NAME})
+endif()
+
+if (BUILD_TESTS)
+    set(TEST_NAME ${PROJECT_NAME}_test)
+    add_executable(${TEST_NAME} src/test.cpp)
+    target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME})
+    add_test(NAME ${TEST_NAME} COMMAND $<TARGET_FILE:${TEST_NAME}> )
 endif()
