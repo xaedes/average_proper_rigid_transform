@@ -9,6 +9,25 @@ namespace average_affine_transform_mat {
 
     template<class Scalar=float> Scalar dot(const Scalar* a, const Scalar* b);
 
+    // void average_mat(Scalar* mat_average, const Scalar* mat_a, const Scalar* mat_b);
+    // void average_mat(Scalar* mat_average, const Scalar* mats, int num);
+    // void average_mat(Scalar* mat_average, const Scalar* mats, int num, const ScalarW* weights);
+
+    // void average_quat(Scalar* quat_average, const Scalar* quat_a, const Scalar* quat_b);
+    // void average_quat(Scalar* quat_average, const Scalar* quats, int num);
+    // void average_quat(Scalar* quat_average, const Scalar* quats, int num, const ScalarW* weights);
+
+    // void mix_mat(Scalar* mat_mix, const Scalar* mat_a, const Scalar* mat_b, ScalarK k_);
+    // void mix_mat(Scalar* mats_mix, const Scalar* mat_a, const Scalar* mat_b, const ScalarK* ks, int num_k);
+    // void mix_quat(Scalar* quat_mix, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k);
+    // void mix_quat(Scalar* quat_mix, const Scalar* quat_a, const Scalar* quat_b, ScalarK k);
+
+    // void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k);
+    // void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, ScalarK k_);
+
+    // void mat_to_quat(Scalar* quat, const Scalar* mat);
+    // void quat_to_mat(Scalar* mat, const Scalar* quat);
+    
     // Function declarations short line
     template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           
     void average_mat(Scalar* mat_average, const Scalar* mat_a, const Scalar* mat_b);
