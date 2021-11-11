@@ -262,13 +262,13 @@ namespace average_affine_transform_mat {
         {
             // Essential Mathematics, page 467
             Scalar angle = acos(cosTheta);
-            Scalar r_angle = static_cast<Scalar>(1) / angle;
+            Scalar r_s_angle = static_cast<Scalar>(1) / sin(angle);
             for (int i=0; i<num_k; ++i)
             {
                 Scalar k = static_cast<Scalar>(ks[i]);
                 Scalar j = static_cast<Scalar>(1)-k;
-                Scalar sj = sin(j * angle) * r_angle;
-                Scalar sk = sin(k * angle) * r_angle;
+                Scalar sj = sin(j * angle) * r_s_angle;
+                Scalar sk = sin(k * angle) * r_s_angle;
                 quat_slerp[i*4 + 0] = quat_a[0] * sj + z[0] * sk;
                 quat_slerp[i*4 + 1] = quat_a[1] * sj + z[1] * sk;
                 quat_slerp[i*4 + 2] = quat_a[2] * sj + z[2] * sk;
