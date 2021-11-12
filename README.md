@@ -33,11 +33,11 @@ void average_quat(Scalar* quat_average, const Scalar* quats, int num, const Scal
 
 void mix_mat(Scalar* mat_mix, const Scalar* mat_a, const Scalar* mat_b, ScalarK k_);
 void mix_mat(Scalar* mats_mix, const Scalar* mat_a, const Scalar* mat_b, const ScalarK* ks, int num_k);
-void mix_quat(Scalar* quat_mix, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k);
 void mix_quat(Scalar* quat_mix, const Scalar* quat_a, const Scalar* quat_b, ScalarK k);
+void mix_quat(Scalar* quats_mix, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k);
 
-void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k);
 void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, ScalarK k_);
+void slerp_quat(Scalar* quat_slerp, const Scalar* quat_a, const Scalar* quat_b, const ScalarK* ks, int num_k);
 
 void mat_to_quat(Scalar* quat, const Scalar* mat);
 void quat_to_mat(Scalar* mat, const Scalar* quat);
