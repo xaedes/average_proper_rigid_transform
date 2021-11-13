@@ -4,12 +4,64 @@
 #include <cassert>
 #include <stdexcept>
 #include <string>
+#include <chrono>
+#include <sstream>
+#include <vector>
+// #include <glm/glm.hpp>q
+// #include <glm/gtx/pca.hpp>
 
 using namespace average_affine_transform_mat;
 
 const float pi = 3.14159265358979f;
 const float d2r = pi / 180.0f;
 const float r2d = pi / 180.0f;
+
+template <class Scalar=float, int StrideY = 4, int StrideX = 1>
+void print_tabular(const char* label, const Scalar* data, int cols=1, int rows=1)
+{
+    static std::vector<std::stringstream> cells;
+    static std::vector<int> col_widths;
+    if (cols * rows > cells.size())
+        cells.resize(cols*rows);
+    col_widths.clear();
+    col_widths.resize(cols);
+
+    for (int y = 0; y < rows; ++y)
+    {
+        for (int x = 0; x < cols; ++x)
+        {
+            cells[y*cols+x].str("");
+            cells[y*cols+x] << data[y*StrideY + x*StrideX];
+            int col_width = cells[y*cols+x].str().size();
+            if (col_width > col_widths[x]) 
+                col_widths[x] = col_width;
+        }
+    }
+    if (label != nullptr)
+    {
+        std::cout << label << "\n";    
+    }
+
+    for (int y = 0; y < rows; ++y)
+    {
+        for (int x = 0; x < cols; ++x)
+        {
+            const auto& str = cells[y*cols+x].str();
+            int col_width = str.size();
+            for (int k=0; k<col_widths[x]-col_width; ++k)
+            {
+                std::cout << " ";
+            }
+            std::cout << str;
+            if (x < cols-1)
+            {
+                std::cout << ", ";
+            }
+        }
+        std::cout << "\n";
+    }   
+    std::cout << "\n";
+}
 
 template <class Scalar=float>
 void print_mat(const char* label, const Scalar* m)
@@ -105,7 +157,7 @@ void rot(float* mat, float angle, int axis)
     if (axis == 2) rot_z(mat, angle);
 }
 
-void test_equality(const char* label, int* error, const float *a, const float *b, int n=16, float eps=1e-6)
+void test_equality(const char* label, int* error, const float *a, const float *b, int n=16, float eps=1e-4)
 {
     for (int i=0; i<n; i++)
     {
@@ -116,10 +168,37 @@ void test_equality(const char* label, int* error, const float *a, const float *b
     }
 }
 
+template <class TimeT  = std::chrono::duration<double, std::milli>,
+          class ClockT = std::chrono::steady_clock>
+struct MeasureTime
+{
+    std::chrono::time_point<ClockT> time_begin;
+    std::chrono::time_point<ClockT> time_end;
+    TimeT duration;
+    void begin()
+    {
+        time_begin = ClockT::now();
+    }
+    double end()
+    {
+        time_end = ClockT::now();
+        duration = time_end - time_begin;
+        return duration.count();
+    }
+    double end(const char* label, int num_it)
+    {
+        end();
+        std::cout << "duration " << label << ": " << (duration.count()/num_it) << " milli seconds\n";
+        return duration.count();
+    }
+};
+
+
 template <class T=int>
 struct ABC_ { T a; T b; T c; };
 using ABC = ABC_<int>;
 using ABCf = ABC_<float>;
+
 
 int test()
 {
@@ -207,8 +286,8 @@ int test()
             {+45,0,-45}
         };
         
-        int num_weights = 10;
-        ABCf weights[10] = {
+        int num_weights = 16;
+        ABCf weights[16] = {
             {1,1,1},
 
             {1,0,0},
@@ -219,12 +298,27 @@ int test()
             {1,0,1},
             {0,1,1},
 
+            {2,1,0},
+            {2,0,1},
+            {0,2,1},
+
+            {1,2,0},
+            {1,0,2},
+            {0,1,2},
+
+
             {1,1,2},
             {1,2,1},
             {2,1,1}
         };
         float mats[3*16];
         float mat_mean[16];
+        float quat_mean[4];
+        float quats[300*4];
+        float qqt_weights[300];
+        float qqt1[16];
+        // float qqt2[16];
+        MeasureTime<> mtime;
         for (int i=0; i<num_angles; ++i)
         for (int k=0; k<num_weights; ++k)
         {
@@ -241,8 +335,91 @@ int test()
             rot(mat_mean, angle_mean * d2r, axis);
 
             average_mat(m, mats, 3, &(weights[k].a)); test_equality("test_7", &error, m, mat_mean);
-        }
+            mat_to_quat(quat_mean, mat_mean);
 
+            int num_repeat = 1;
+            int num_items = 3*num_repeat;
+            for (int j=0; j<num_repeat; ++j)
+            {
+                mat_to_quat(quats + 4*(0+j*num_items), mats + 16*0);
+                mat_to_quat(quats + 4*(1+j*num_items), mats + 16*1);
+                mat_to_quat(quats + 4*(2+j*num_items), mats + 16*2);
+                qqt_weights[0+j*num_items] = weights[k].a;
+                qqt_weights[1+j*num_items] = weights[k].b;
+                qqt_weights[2+j*num_items] = weights[k].c;
+            }
+            int num_iter;
+            num_iter = 10;
+            // mtime.begin();
+            for (int j=0; j<num_iter;++j)
+            {
+                compute_qqt(qqt1, quats, num_items, qqt_weights);
+            }
+            // mtime.end("compute_qqt", num_iter);
+
+            float quats_avg[4];
+            float quats_avg_eig[4];
+            average_quat(quats_avg, quats, num_items, qqt_weights);
+            average_quat_eig(quats_avg_eig, quats, num_items, qqt_weights);
+
+            num_iter = 100;
+            // mtime.begin();
+            for (int j=0; j<num_iter;++j)
+            {
+                average_quat(quats_avg, quats, num_items, qqt_weights);
+            }
+            // mtime.end("average_quat", num_iter);
+
+            // mtime.begin();
+            for (int j=0; j<num_iter;++j)
+            {
+                average_quat_eig(quats_avg_eig, quats, num_items, qqt_weights);
+            }
+            // mtime.end("average_quat_eig", num_iter);
+
+            // print_quat("quats_avg", quats_avg);
+            // print_quat("quats_avg_eig", quats_avg_eig);
+            bool different = false;
+            for (int j = 0; j < 4; ++j)
+            {
+                if (abs(abs(quats_avg[j])-abs(quats_avg_eig[j])) > 1e-6)
+                {
+                    different = true;
+                    break;
+                }
+            }
+            bool weights_different = false;
+            for (int j = 1; j < num_items; ++j)
+            {
+                if (abs(qqt_weights[j] - qqt_weights[j-1]) > 1e-6)
+                {
+                    weights_different = true;
+                    break;
+                }
+            }
+            // expected:
+            // when weights are different the resulting averages may also be different.
+            // but when weights are the same, the results should also be the same.
+
+            if (different && !weights_different)
+            {
+                error += 1;
+            }
+            if (different && !weights_different)
+            {
+                std::cout << "weights_different " << weights_different << "\n";
+                print_tabular("angles", &angles[i].a, 3);
+                print_tabular("weights", &weights[k].a, 3);
+                print_tabular("angle_mean", &angle_mean, 1);
+                // std::cout << "angles:     " << angles[i].a << ", " << angles[i].b << angles[i].c << "\n";
+                // std::cout << "weights:    " << weights[k].a << weights[k].b << weights[k].c << "\n";
+                std::cout << "angle_mean: " << angle_mean << "\n";
+                print_quat("quat_mean", quat_mean);
+                print_quat("quats_avg", quats_avg);
+                print_quat("quats_avg_eig", quats_avg_eig);
+            }
+
+        }
 
     } // for (int axis=0; axis<3; axis++)
     #undef ROT
@@ -250,6 +427,8 @@ int test()
 
     return error;
 }
+
+
 
 int main() {
 

@@ -16,6 +16,7 @@ namespace average_affine_transform_mat {
     // void average_quat(Scalar* quat_average, const Scalar* quat_a, const Scalar* quat_b);
     // void average_quat(Scalar* quat_average, const Scalar* quats, int num);
     // void average_quat(Scalar* quat_average, const Scalar* quats, int num, const ScalarW* weights);
+    // void average_quat_eig(Scalar* quat_average, const Scalar* quats, int num, const ScalarW* weights);
 
     // void mix_mat(Scalar* mat_mix, const Scalar* mat_a, const Scalar* mat_b, ScalarK k_);
     // void mix_mat(Scalar* mats_mix, const Scalar* mat_a, const Scalar* mat_b, const ScalarK* ks, int num_k);
@@ -27,6 +28,8 @@ namespace average_affine_transform_mat {
 
     // void mat_to_quat(Scalar* quat, const Scalar* mat);
     // void quat_to_mat(Scalar* mat, const Scalar* quat);
+    // 
+    // unsigned int find_eigenvalues_sym_real(Scalar* eigenvalues, Scalar* eigenvectors, const Scalar* mat);
     
     // Function declarations short line
     template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           
@@ -42,6 +45,8 @@ namespace average_affine_transform_mat {
     void average_quat(Scalar* quat_average, const Scalar* quats, int num, const ScalarW* weights);
     template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0>                                                                             
     void average_quat(Scalar* quat_average, const Scalar* quats, int num);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarW=float>
+    void average_quat_eig(Scalar* quat_average, const Scalar* quats, int num, const ScalarW* weights);
 
     template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                      
     void mix_mat(Scalar* mat_mix, const Scalar* mat_a, const Scalar* mat_b, ScalarK k_);
@@ -62,6 +67,8 @@ namespace average_affine_transform_mat {
     template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           
     void mat_to_quat(Scalar* quat, const Scalar* mat);
 
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1>
+    unsigned int find_eigenvalues_sym_real(Scalar* eigenvalues, Scalar* eigenvectors, const Scalar* mat);
 
     // Function declarations long line (scroll to the right)
     template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           void average_mat(Scalar* mat_average, const Scalar* mat_a, const Scalar* mat_b);
@@ -71,6 +78,7 @@ namespace average_affine_transform_mat {
     template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0>                                                                             void average_quat(Scalar* quat_average, const Scalar* quat_a, const Scalar* quat_b);
     template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarW=float>                                                        void average_quat(Scalar* quat_average, const Scalar* quats, int num, const ScalarW* weights);
     template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0>                                                                             void average_quat(Scalar* quat_average, const Scalar* quats, int num);
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarW=float>                                                        void average_quat_eig(Scalar* quat_average, const Scalar* quats, int num, const ScalarW* weights);
 
     template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>                      void mix_mat(Scalar* mat_mix, const Scalar* mat_a, const Scalar* mat_b, ScalarK k_);
     template<class Scalar=float, int StrideMat = 16, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0, class ScalarK=float>  void mix_mat(Scalar* mats_mix, const Scalar* mat_a, const Scalar* mat_b, const ScalarK* ks, int num_k);
@@ -82,6 +90,9 @@ namespace average_affine_transform_mat {
 
     template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           void quat_to_mat(Scalar* mat, const Scalar* quat);
     template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0>                                           void mat_to_quat(Scalar* quat, const Scalar* mat);
+
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1>                                                                           unsigned int find_eigenvalues_sym_real(Scalar* eigenvalues, Scalar* eigenvectors, const Scalar* mat);
+
 
     // Function definitions
 
@@ -237,8 +248,9 @@ namespace average_affine_transform_mat {
             // Essential Mathematics, page 467
             Scalar j = static_cast<Scalar>(1)-k;
             Scalar angle = acos(cosTheta);
-            Scalar sj = sin(j * angle) / sin(angle);
-            Scalar sk = sin(k * angle) / sin(angle);
+            Scalar r_s_angle = static_cast<Scalar>(1) / sin(angle);
+            Scalar sj = sin(j * angle) * r_s_angle;
+            Scalar sk = sin(k * angle) * r_s_angle;
             quat_slerp[0] = quat_a[0] * sj + z[0] * sk;
             quat_slerp[1] = quat_a[1] * sj + z[1] * sk;
             quat_slerp[2] = quat_a[2] * sj + z[2] * sk;
@@ -506,6 +518,347 @@ namespace average_affine_transform_mat {
         mat_average[StrideX*3+StrideY*1] = pos_average[1];
         mat_average[StrideX*3+StrideY*2] = pos_average[2];
     }
+
+    // eigen analysis based averaging:
+
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1, int QuatW = 3, int QuatXYZ = 0, class ScalarW=float>
+    void compute_qqt(Scalar* qqt, const Scalar* quats, int num, const ScalarW* weights)
+    {
+        Scalar wsum = 0;
+        for (int k=0; k<num; ++k)
+        {
+            wsum += static_cast<Scalar>(weights[k]);
+        }
+        if (wsum == 0) wsum = 1;
+        for (int y = 0; y < 4; ++y)
+        {
+            for (int x = 0; x < 4; ++x)
+            {
+                int xy = StrideX*x + StrideY*y;
+                qqt[xy] = 0;
+            }
+        }
+        for (int k=0; k<num; ++k)
+        {
+            Scalar w = static_cast<Scalar>(weights[k]) / wsum;
+            Scalar w2 = w;//*w;
+            const Scalar* quat = quats + k*4;
+            for (int y = 0; y < 4; ++y)
+            {
+                // only compute values of upper matrix elements
+                for (int x = y; x < 4; ++x)
+                {
+                    int xy = StrideX*x + StrideY*y;
+                    qqt[xy] += w2 * quat[y] * quat[x];
+                }
+            }
+        }
+        // mirror elements in lower matrix from upper matrix elements
+        for (int y = 0; y < 4; ++y)
+        {
+            for (int x = 0; x < y; ++x)
+            {
+                int xy = StrideX*x + StrideY*y;
+                int yx = StrideX*y + StrideY*x;
+                qqt[xy] = qqt[yx];
+            }
+        }
+
+    }
+
+    template<class Scalar=float>
+    int argmin(const Scalar* values, int num)
+    {
+        if (num <= 0) return num;
+
+        int best_idx = 0;
+        Scalar best = values[best_idx];
+        for (int i=1; i<num; ++i)
+        {
+            Scalar v = values[i];
+            if (v < best)
+            {
+                best_idx = i;
+                best = v;
+            }
+        }
+        return best_idx;
+    }
+
+    template<class Scalar=float>
+    int argmax(const Scalar* values, int num)
+    {
+        if (num <= 0) return num;
+
+        int best_idx = 0;
+        Scalar best = values[best_idx];
+        for (int i=1; i<num; ++i)
+        {
+            Scalar v = values[i];
+            if (v > best)
+            {
+                best_idx = i;
+                best = v;
+            }
+        }
+        return best_idx;
+    }
+
+    template<class Scalar=float>
+    bool approx_equal(Scalar a, Scalar b, Scalar eps)
+    {
+        return abs(a-b) < eps;
+    }
+
+    template<class Scalar=float>
+    Scalar transfer_sign(Scalar v, Scalar s)
+    {
+        return ((s) >= 0 ? abs(v) : -abs(v));
+    }
+
+    template<class Scalar=float>
+    Scalar pythag(Scalar a, Scalar b) 
+    {
+        // glm/gtx/pca.inl pythag
+        // see GLM.LICENSE file 
+        static const Scalar epsilon = static_cast<Scalar>(0.0000001);
+        Scalar absa = abs(a);
+        Scalar absb = abs(b);
+        if(absa > absb) 
+        {
+            absb /= absa;
+            absb *= absb;
+            return absa * sqrt(static_cast<Scalar>(1) + absb);
+        }
+        if(approx_equal<Scalar>(absb,0,epsilon)) return static_cast<Scalar>(0);
+        absa /= absb;
+        absa *= absa;
+        return absb * sqrt(static_cast<Scalar>(1) + absa);
+    }
+
+    /// Assuming the provided covariance matrix `covarMat` is symmetric and real-valued, this function find the `D` Eigenvalues of the matrix, and also provides the corresponding Eigenvectors.
+    /// Note: the data in `outEigenvalues` and `outEigenvectors` are in matching order, i.e. `outEigenvector[i]` is the Eigenvector of the Eigenvalue `outEigenvalue[i]`.
+    /// This is a numeric implementation to find the Eigenvalues, using 'QL decomposition` (variant of QR decomposition: https://en.wikipedia.org/wiki/QR_decomposition).
+    /// @param covarMat A symmetric, real-valued covariance matrix, e.g. computed from `computeCovarianceMatrix`.
+    /// @param outEigenvalues Vector to receive the found eigenvalues
+    /// @param outEigenvectors Matrix to receive the found eigenvectors corresponding to the found eigenvalues, as column vectors
+    /// @return The number of eigenvalues found, usually D if the precondition of the covariance matrix is met.
+    template<class Scalar=float, int StrideY = 4, int StrideX = 1>
+    unsigned int find_eigenvalues_sym_real(Scalar* eigenvalues, Scalar* eigenvectors, const Scalar* mat)
+    {
+        // glm/gtx/pca.inl findEigenvaluesSymReal(...)
+        // see GLM.LICENSE file 
+        constexpr int D = 4;
+
+        Scalar a[D * D]; // matrix -- input and workspace for algorithm (will be changed inplace)
+        Scalar d[D]; // diagonal elements
+        Scalar e[D]; // off-diagonal elements
+
+        for(int r = 0; r < D; r++)
+            for(int c = 0; c < D; c++)
+                a[(r) * D + (c)] = mat[c*StrideX + r*StrideY];
+
+        // 1. Householder reduction.
+        int l, k, j, i;
+        Scalar scale, hh, h, g, f;
+        static const Scalar epsilon = static_cast<Scalar>(0.0000001);
+
+        for(i = D; i >= 2; i--)
+        {
+            l = i - 1;
+            h = scale = 0;
+            if(l > 1)
+            {
+                for(k = 1; k <= l; k++)
+                {
+                    scale += abs(a[(i - 1) * D + (k - 1)]);
+                }
+                if(approx_equal<Scalar>(scale, 0, epsilon))
+                {
+                    e[i - 1] = a[(i - 1) * D + (l - 1)];
+                }
+                else
+                {
+                    for(k = 1; k <= l; k++)
+                    {
+                        a[(i - 1) * D + (k - 1)] /= scale;
+                        h += a[(i - 1) * D + (k - 1)] * a[(i - 1) * D + (k - 1)];
+                    }
+                    f = a[(i - 1) * D + (l - 1)];
+                    g = ((f >= 0) ? -sqrt(h) : sqrt(h));
+                    e[i - 1] = scale * g;
+                    h -= f * g;
+                    a[(i - 1) * D + (l - 1)] = f - g;
+                    f = 0;
+                    for(j = 1; j <= l; j++)
+                    {
+                        a[(j - 1) * D + (i - 1)] = a[(i - 1) * D + (j - 1)] / h;
+                        g = 0;
+                        for(k = 1; k <= j; k++)
+                        {
+                            g += a[(j - 1) * D + (k - 1)] * a[(i - 1) * D + (k - 1)];
+                        }
+                        for(k = j + 1; k <= l; k++)
+                        {
+                            g += a[(k - 1) * D + (j - 1)] * a[(i - 1) * D + (k - 1)];
+                        }
+                        e[j - 1] = g / h;
+                        f += e[j - 1] * a[(i - 1) * D + (j - 1)];
+                    }
+                    hh = f / (h + h);
+                    for(j = 1; j <= l; j++)
+                    {
+                        f = a[(i - 1) * D + (j - 1)];
+                        e[j - 1] = g = e[j - 1] - hh * f;
+                        for(k = 1; k <= j; k++)
+                        {
+                            a[(j - 1) * D + (k - 1)] -= (f * e[k - 1] + g * a[(i - 1) * D + (k - 1)]);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                e[i - 1] = a[(i - 1) * D + (l - 1)];
+            }
+            d[i - 1] = h;
+        }
+        d[0] = 0;
+        e[0] = 0;
+        for(i = 1; i <= D; i++)
+        {
+            l = i - 1;
+            if(!approx_equal<Scalar>(d[i - 1], 0, epsilon))
+            {
+                for(j = 1; j <= l; j++)
+                {
+                    g = 0;
+                    for(k = 1; k <= l; k++)
+                    {
+                        g += a[(i - 1) * D + (k - 1)] * a[(k - 1) * D + (j - 1)];
+                    }
+                    for(k = 1; k <= l; k++)
+                    {
+                        a[(k - 1) * D + (j - 1)] -= g * a[(k - 1) * D + (i - 1)];
+                    }
+                }
+            }
+            d[i - 1] = a[(i - 1) * D + (i - 1)];
+            a[(i - 1) * D + (i - 1)] = 1;
+            for(j = 1; j <= l; j++)
+            {
+                a[(j - 1) * D + (i - 1)] = a[(i - 1) * D + (j - 1)] = 0;
+            }
+        }
+
+        // 2. Calculation of eigenvalues and eigenvectors (QL algorithm)
+        int m, iter;
+        Scalar s, r, p, dd, c, b;
+        const int MAX_ITER = 30;
+
+        for(i = 2; i <= D; i++)
+        {
+            e[i - 2] = e[i - 1];
+        }
+        e[D - 1] = 0;
+
+        for(l = 1; l <= D; l++)
+        {
+            iter = 0;
+            do
+            {
+                for(m = l; m <= D - 1; m++)
+                {
+                    dd = abs(d[m - 1]) + abs(d[m - 1 + 1]);
+                    if(approx_equal<Scalar>(abs(e[m - 1]) + dd, dd, epsilon))
+                        break;
+                }
+                if(m != l)
+                {
+                    if(iter++ == MAX_ITER)
+                    {
+                        return 0; // Too many iterations in FindEigenvalues
+                    }
+                    g = (d[l - 1 + 1] - d[l - 1]) / (2 * e[l - 1]);
+                    r = pythag<Scalar>(g, 1);
+                    g = d[m - 1] - d[l - 1] + e[l - 1] / (g + transfer_sign(r, g));
+                    s = c = 1;
+                    p = 0;
+                    for(i = m - 1; i >= l; i--)
+                    {
+                        f = s * e[i - 1];
+                        b = c * e[i - 1];
+                        e[i - 1 + 1] = r = pythag(f, g);
+                        if(approx_equal<Scalar>(r, 0, epsilon))
+                        {
+                            d[i - 1 + 1] -= p;
+                            e[m - 1] = 0;
+                            break;
+                        }
+                        s = f / r;
+                        c = g / r;
+                        g = d[i - 1 + 1] - p;
+                        r = (d[i - 1] - g) * s + 2 * c * b;
+                        d[i - 1 + 1] = g + (p = s * r);
+                        g = c * r - b;
+                        for(k = 1; k <= D; k++)
+                        {
+                            f = a[(k - 1) * D + (i - 1 + 1)];
+                            a[(k - 1) * D + (i - 1 + 1)] = s * a[(k - 1) * D + (i - 1)] + c * f;
+                            a[(k - 1) * D + (i - 1)] = c * a[(k - 1) * D + (i - 1)] - s * f;
+                        }
+                    }
+                    if(approx_equal<Scalar>(r, 0, epsilon) && (i >= l))
+                        continue;
+                    d[l - 1] -= p;
+                    e[l - 1] = g;
+                    e[m - 1] = 0;
+                }
+            } while(m != l);
+        }
+
+        // 3. output
+        for(i = 0; i < D; i++)
+            eigenvalues[i] = d[i];
+        for(i = 0; i < D; i++)
+            for(j = 0; j < D; j++)
+                eigenvectors[i*StrideX+j*StrideY] = a[(j) * D + (i)];
+
+        return D;
+    }
+
+    template<class Scalar=float, int QuatW = 3, int QuatXYZ = 0, class ScalarW=float>
+    void average_quat_eig(Scalar* quat_average, const Scalar* quats, int num, const ScalarW* weights)
+    {
+        // Markley, F.L., Cheng, Y., Crassidis, J.L. and Oshman, Y., 2007. Averaging quaternions. Journal of Guidance, Control, and Dynamics, 30(4), pp.1193-1197.
+        
+        // https://stackoverflow.com/a/27410865/798588
+        //
+        // let Q = [w_1 * q_1, w_2 * q_2, ..., w_n * q_n]
+        //
+        // where w_i is the weight of the i-th quaternion and q_i is the i-tz
+        // quaternion as column vector. Q is therefore a 4xN matrix. The
+        // normalized eigenvector corresponding to the largest eigenvalue of
+        // Q*Q^T is the weighted average. Since Q*Q^T is self-adjoint and at
+        // least positive semi-definite, fast and robust methods of solving that
+        // eigenproblem are available. Computing the matrix-matrix product is
+        // the only step that grows with the number of elements being averaged.
+        // Q*Q^T is a symmetric 4x4 matrix.
+        
+        constexpr int StrideX = 1;
+        constexpr int StrideY = 4;
+        Scalar qqt[4*4];
+        Scalar qqt_eigval[4];
+        Scalar qqt_eigvec[4*4];
+        compute_qqt<Scalar,StrideY,StrideX,QuatW,QuatXYZ,ScalarW>(qqt, quats, num, weights);
+        find_eigenvalues_sym_real<Scalar,StrideY,StrideX>(qqt_eigval, qqt_eigvec, qqt);
+        int biggest_eigval = argmax(qqt_eigval, 4);
+        for (int i = 0; i < 4; ++i)
+        {
+            quat_average[i] = qqt_eigvec[i*StrideY+biggest_eigval*StrideX];
+        }
+    }
+
 
 
 } // namespace average_affine_transform_mat
