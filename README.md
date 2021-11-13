@@ -62,7 +62,7 @@ The expected weighted average should correspond to a rotation around X-Axis by 3
 Slerp-based weighted average will return the expected value.
 Eigen analysis-based weighted average will return a rotation by 26.56°.
 
-Eigen analysis-based method will return the quaternion which minimized Frobenius norm of the corresponding rotation matrices. The slerp based method will instead compute the average in 3D rotational space in terms of quaternions.
+Eigen analysis-based method will return the quaternion which minimized Frobenius norm of the corresponding rotation matrices (see [1]). The slerp based method will instead compute the average in 3D rotational space in terms of quaternions.
 
 ```python
 import math
@@ -125,3 +125,7 @@ eigen 26.565051177077994
 slerp 30.00000000000001
 ```
 
+
+---
+
+[1] Markley, F.L., Cheng, Y., Crassidis, J.L. and Oshman, Y., 2007. Averaging quaternions. Journal of Guidance, Control, and Dynamics, 30(4), pp.1193-1197.
