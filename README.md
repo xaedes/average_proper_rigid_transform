@@ -65,63 +65,63 @@ Eigen analysis-based weighted average will return a rotation by 26.56°.
 Eigen analysis-based method will return the quaternion which minimized Frobenius norm of the corresponding rotation matrices. The slerp based method will instead compute the average in 3D rotational space in terms of quaternions.
 
 ```python
-    import math
-    import numpy as np
-    import quaternion # (pip install numpy-quaternion)
-    d2r = math.pi/180
-    r2d = 180/math.pi
+import math
+import numpy as np
+import quaternion # (pip install numpy-quaternion)
+d2r = math.pi/180
+r2d = 180/math.pi
 
-    def recover_angle(mat):
-        return np.arctan2(mat[1,0], mat[0,0])
+def recover_angle(mat):
+    return np.arctan2(mat[1,0], mat[0,0])
 
-    # ground truth
-    angles = np.array([0,90])
-    weights = np.array([2,1])
-    mean_angle = np.sum(angles*(weights/weights.sum()))
-    quaternion_mean = quaternion.from_euler_angles(mean_angle*d2r,0,0)
+# ground truth
+angles = np.array([0,90])
+weights = np.array([2,1])
+mean_angle = np.sum(angles*(weights/weights.sum()))
+quaternion_mean = quaternion.from_euler_angles(mean_angle*d2r,0,0)
 
-    # eigen analysis
-    Q = quaternion.as_float_array(
-        [
-            (weight**0.5) * quaternion.from_euler_angles(0,0,angle*d2r) 
-            for angle,weight 
-            in zip(angles,weights)
-        ]
-    ).T
-    QQT = Q @ Q.T
-    eigval,eigvec = np.linalg.eig(QQT)
-    quaternion_mean_eig = quaternion.from_float_array( eigvec[:,np.argmax(eigval)] )
+# eigen analysis
+Q = quaternion.as_float_array(
+    [
+        (weight**0.5) * quaternion.from_euler_angles(0,0,angle*d2r) 
+        for angle,weight 
+        in zip(angles,weights)
+    ]
+).T
+QQT = Q @ Q.T
+eigval,eigvec = np.linalg.eig(QQT)
+quaternion_mean_eig = quaternion.from_float_array( eigvec[:,np.argmax(eigval)] )
 
-    # slerp based
-    def slerp_avg(quaternions, weights):
-        # welford's mean in terms of linear mix operations:
-        toqt = quaternion.from_float_array
-        mix = lambda a,b,k: quaternion.slerp(toqt(a),toqt(b),0,1,k)
-        wmean, wsum, num = quaternions[0], weights[0], len(weights)
-        for i in range(1,num):
-            wsum += weights[i]
-            k = (weights[i]/wsum)
-            # wmean := wmean*(1-k) + quaternions[i]*k
-            wmean = mix(wmean,quaternions[i],k) 
-        return wmean
+# slerp based
+def slerp_avg(quaternions, weights):
+    # welford's mean in terms of linear mix operations:
+    toqt = quaternion.from_float_array
+    mix = lambda a,b,k: quaternion.slerp(toqt(a),toqt(b),0,1,k)
+    wmean, wsum, num = quaternions[0], weights[0], len(weights)
+    for i in range(1,num):
+        wsum += weights[i]
+        k = (weights[i]/wsum)
+        # wmean := wmean*(1-k) + quaternions[i]*k
+        wmean = mix(wmean,quaternions[i],k) 
+    return wmean
 
-    quaternion_mean_slerp = slerp_avg(quaternion.as_float_array(
-        [quaternion.from_euler_angles(0,0,angle*d2r) for angle in angles]
-    ), weights)
+quaternion_mean_slerp = slerp_avg(quaternion.as_float_array(
+    [quaternion.from_euler_angles(0,0,angle*d2r) for angle in angles]
+), weights)
 
-    mat_mean = quaternion.as_rotation_matrix(quaternion_mean)
-    mat_mean_eig = quaternion.as_rotation_matrix(quaternion_mean_eig)
-    mat_mean_slerp = quaternion.as_rotation_matrix(quaternion_mean_slerp)
+mat_mean = quaternion.as_rotation_matrix(quaternion_mean)
+mat_mean_eig = quaternion.as_rotation_matrix(quaternion_mean_eig)
+mat_mean_slerp = quaternion.as_rotation_matrix(quaternion_mean_slerp)
 
-    print("expected", recover_angle(mat_mean)*r2d)
-    print("eigen", recover_angle(mat_mean_eig)*r2d)
-    print("slerp", recover_angle(mat_mean_slerp)*r2d)
+print("expected", recover_angle(mat_mean)*r2d)
+print("eigen", recover_angle(mat_mean_eig)*r2d)
+print("slerp", recover_angle(mat_mean_slerp)*r2d)
 ```
 
 Outputs:
 ```
-    expected 29.999999999999996
-    eigen 26.565051177077994
-    slerp 30.00000000000001
+expected 29.999999999999996
+eigen 26.565051177077994
+slerp 30.00000000000001
 ```
 
