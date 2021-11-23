@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-set(PROJECT_NAME average_affine_transform_mat)
+set(PROJECT_NAME average_proper_rigid_transform)
 project( ${PROJECT_NAME} )
 
 option(BUILD_EXAMPLE "Build example." ON)
@@ -30,6 +30,4 @@ if (BUILD_TESTS)
     add_executable(${TEST_NAME} src/test.cpp)
     target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME})
     add_test(NAME ${TEST_NAME} COMMAND $<TARGET_FILE:${TEST_NAME}> )
-    # find_package(glm)
-    # target_link_libraries(${TEST_NAME} PRIVATE glm::glm)
 endif()

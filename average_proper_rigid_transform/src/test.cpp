@@ -1,5 +1,5 @@
 
-#include "average_affine_transform_mat/average_affine_transform_mat.h"
+#include "average_proper_rigid_transform/average_proper_rigid_transform.h"
 #include <iostream>
 #include <cassert>
 #include <stdexcept>
@@ -7,10 +7,9 @@
 #include <chrono>
 #include <sstream>
 #include <vector>
-// #include <glm/glm.hpp>q
-// #include <glm/gtx/pca.hpp>
 
-using namespace average_affine_transform_mat;
+
+using namespace average_proper_rigid_transform;
 
 const float pi = 3.14159265358979f;
 const float d2r = pi / 180.0f;

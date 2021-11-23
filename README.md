@@ -1,7 +1,7 @@
-# average_proper_rigid_transfom
+# average_proper_rigid_transform
 Small zero dependency C++ library to correctly average proper rigid transformation matrices using quaternion SLERP.
 Supports weighted and non-weighted average of two or more matrices/quaternions.
-Proper rigid transformations transformations consist of rotation and translation.
+Proper rigid transformations consist of rotation and translation.
 
 ```cpp
 int main() {

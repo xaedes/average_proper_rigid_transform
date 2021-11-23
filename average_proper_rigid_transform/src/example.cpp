@@ -1,6 +1,6 @@
-#include "average_affine_transform_mat/average_affine_transform_mat.h"
+#include "average_proper_rigid_transform/average_proper_rigid_transform.h"
 #include <iostream>
-using namespace average_affine_transform_mat;
+using namespace average_proper_rigid_transform;
 
 template <class Scalar=float>
 void print_mat(const char* label, const Scalar* m)

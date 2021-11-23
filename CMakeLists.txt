@@ -1,2 +1,2 @@
 
-add_subdirectory(average_affine_transform_mat)
+add_subdirectory(average_proper_rigid_transform)

@@ -5,7 +5,7 @@
 #include <cmath>
 
 
-namespace average_affine_transform_mat {
+namespace average_proper_rigid_transform {
 
     template<class Scalar=float> Scalar dot(const Scalar* a, const Scalar* b);
 
@@ -860,4 +860,4 @@ namespace average_affine_transform_mat {
 
 
 
-} // namespace average_affine_transform_mat
+} // namespace average_proper_rigid_transform
