@@ -541,7 +541,6 @@ namespace average_affine_transform_mat {
         for (int k=0; k<num; ++k)
         {
             Scalar w = static_cast<Scalar>(weights[k]) / wsum;
-            Scalar w2 = w;//*w;
             const Scalar* quat = quats + k*4;
             for (int y = 0; y < 4; ++y)
             {
@@ -549,7 +548,7 @@ namespace average_affine_transform_mat {
                 for (int x = y; x < 4; ++x)
                 {
                     int xy = StrideX*x + StrideY*y;
-                    qqt[xy] += w2 * quat[y] * quat[x];
+                    qqt[xy] += w * quat[y] * quat[x];
                 }
             }
         }
